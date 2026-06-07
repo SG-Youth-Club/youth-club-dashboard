@@ -1,81 +1,87 @@
+// Make dashboard editable
 document.addEventListener("DOMContentLoaded", () => {
 
-    const editableElements = document.querySelectorAll(
-        "h1,h2,h3,h4,p,li,strong,label,.footer-pill,.dashboard-pill,.staff-name,.role-header,.quick-title"
-    );
-
-    editableElements.forEach(element => {
-        element.contentEditable = true;
+    document.querySelectorAll(
+        ".page h1, .page h2, .page h3, .page h4, .page p, .page li, .page div.staff-name"
+    ).forEach(el => {
+        el.contentEditable = true;
     });
 
 });
 
-async function saveCopy() {
+// SAVE VERSION
+function saveCopy() {
 
-    try {
+    const page = document.querySelector(".page");
 
-        const cssResponse = await fetch("style.css");
-        const css = await cssResponse.text();
+    const data = {
+        html: page.innerHTML
+    };
 
-        const jsResponse = await fetch("script.js");
-        const js = await jsResponse.text();
+    const blob = new Blob(
+        [JSON.stringify(data)],
+        { type: "application/json" }
+    );
 
-        let html = document.documentElement.outerHTML;
+    const a = document.createElement("a");
 
-        html = html.replace(
-            '<link rel="stylesheet" href="style.css">',
-            `<style>\n${css}\n</style>`
-        );
+    a.href = URL.createObjectURL(blob);
 
-        html = html.replace(
-            '<script src="script.js"></script>',
-            `<script>\n${js}\n<\/script>`
-        );
+    const filename =
+        prompt("Enter file name:", "Meeting1") || "Dashboard";
 
-        const blob = new Blob(
-            [html],
-            { type: "text/html" }
-        );
+    a.download = filename + ".dashboard";
 
-        const a = document.createElement("a");
+    a.click();
 
-        const date = new Date();
+    URL.revokeObjectURL(a.href);
+}
 
-        const filename =
-            "SpectrumDashboard_" +
-            date.getFullYear() + "-" +
-            String(date.getMonth() + 1).padStart(2, "0") + "-" +
-            String(date.getDate()).padStart(2, "0") +
-            ".html";
 
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
+// LOAD VERSION
+function loadVersion() {
 
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+    const input = document.createElement("input");
 
-    } catch (error) {
+    input.type = "file";
+    input.accept = ".dashboard";
 
-        alert(
-            "Could not create portable file. Make sure index.html, style.css and script.js are all in the same folder."
-        );
+    input.onchange = function (e) {
 
-        console.error(error);
-    }
-}function exportPDF() {
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function () {
+
+            const data = JSON.parse(reader.result);
+
+            document.querySelector(".page").innerHTML =
+                data.html;
+
+            // re-enable editing after loading
+            document.querySelectorAll(
+                ".page h1, .page h2, .page h3, .page h4, .page p, .page li, .page div.staff-name"
+            ).forEach(el => {
+                el.contentEditable = true;
+            });
+
+        };
+
+        reader.readAsText(file);
+
+    };
+
+    input.click();
+}
+
+
+// EXPORT PDF
+function exportPDF() {
 
     const element = document.querySelector(".page");
-
-    if (!element) {
-        alert("Could not find .page element");
-        return;
-    }
-
-    if (typeof html2pdf === "undefined") {
-        alert("html2pdf library not loaded");
-        return;
-    }
 
     const opt = {
         margin: 0,
