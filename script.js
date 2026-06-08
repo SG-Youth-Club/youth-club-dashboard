@@ -85,7 +85,7 @@ function exportPDF() {
         },
         jsPDF: {
     unit: "px",
-    format: [1400, element.scrollHeight + 200]
+    format: [1200, element.scrollHeight + 200]
         }
     };
 
